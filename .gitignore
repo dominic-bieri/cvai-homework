@@ -1,7 +1,5 @@
 # --- Datasets ---
-# This ignores the folder where you are now downloading your Roboflow data
 dataset/
-bees-2/
 
 # --- Python / Environment ---
 .venv/
@@ -10,11 +8,9 @@ __pycache__/
 *$py.class
 
 # --- Environment Variables ---
-# IMPORTANT: This prevents your Roboflow API Key from being leaked to GitHub
 .env
 
 # --- YOLO / Training Outputs ---
-# This ignores the "runs" folder and any downloaded/saved model weights
 runs/
 local_bee_models/
 *.pt
