@@ -18,3 +18,6 @@ local_bee_models/
 # --- OS Specific ---
 .DS_Store
 Thumbs.db
+
+# Jetbrains
+.idea/
