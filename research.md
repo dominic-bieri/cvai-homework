@@ -11,3 +11,8 @@ https://docs.ultralytics.com/de/compare/yolo26-vs-yolo11/#ideal-use-cases-and-de
 > - Drohnen- und Luftbildanalysen: Die Integration von ProgLoss + STAL macht es einzigartig fähig, winzige, sich schnell bewegende Objekte über weite Landschaften hinweg zu tracken.
 
 ## Dataset
+
+
+## Tapo Cam
+
+https://www.tp-link.com/de/support/faq/2680/
