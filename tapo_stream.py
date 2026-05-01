@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
+
 user = quote(os.environ["TAPO_USER"], safe="")
 pw   = quote(os.environ["TAPO_PASS"], safe="")
 host = os.environ["TAPO_HOST"]
