@@ -1,0 +1,9 @@
+services:
+  app:
+    image: heartexlabs/label-studio:latest
+    container_name: label-studio
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./labelstudio-data:/label-studio/data
+    restart: unless-stopped
