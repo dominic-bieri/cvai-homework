@@ -21,3 +21,6 @@ Thumbs.db
 
 # Jetbrains
 .idea/
+
+# Bee Detection Debug Images
+detections/
