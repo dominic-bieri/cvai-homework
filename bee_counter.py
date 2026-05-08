@@ -60,7 +60,7 @@ def main():
                     
                     # Optional: save image for verification
                     timestamp = time.strftime("%Y%m%d-%H%M%S")
-                    results[0].save(filename=f"detections/bee_{timestamp}.jpg")
+                    results[0].save(filename=f"detections/bee_{timestamp}.jpg", line_width=1, font_size=6)
                 else:
                     logger.error("Failed to retrieve frame from stream.")
 
