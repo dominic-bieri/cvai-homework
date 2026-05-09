@@ -1,16 +1,5 @@
-import os
-from dotenv import load_dotenv
-from roboflow import Roboflow
-from ultralytics import YOLO
 import torch
-
-load_dotenv()
-
-rf = Roboflow(api_key=os.getenv("ROBOFLOW_API_KEY"))
-
-project = rf.workspace("roboflow-100").project("bees-jt5in")
-version = project.version(2)
-dataset = version.download("yolov8", location="./dataset")
+from ultralytics import YOLO
 
 if torch.cuda.is_available():
     print("NVIDIA GPU (CUDA) detected!")
@@ -26,13 +15,11 @@ model = YOLO('yolo26n.pt')
 
 print(f"Starting YOLO local training on {compute_device}...")
 
-# TODO replace with self-labled dataset
-dataset_yaml_path = os.path.join(dataset.location, 'data.yaml')
-
 results = model.train(
-    data=dataset_yaml_path,
+    data="self-labled-dataset-yolo/data.yaml",
     epochs=150,
     imgsz=1280,
+    rect=True,        # preserves 16:9 ratio instead of squashing to square
     batch=16,
     workers=8,
     cache='disk',
