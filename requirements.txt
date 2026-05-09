@@ -1,5 +1,4 @@
 ultralytics
 torch
-roboflow
 python-dotenv
 opencv-python
