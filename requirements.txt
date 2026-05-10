@@ -2,3 +2,4 @@ ultralytics
 torch
 python-dotenv
 opencv-python
+requests
