@@ -1,5 +1,7 @@
 # --- Datasets ---
 dataset/
+self-labled-dataset-yolo/
+self-labled-dataset/images/
 
 # --- Python / Environment ---
 .venv/
