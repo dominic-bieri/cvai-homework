@@ -19,11 +19,7 @@ results = model.train(
     data="self-labled-dataset-yolo/data.yaml",
     epochs=150,
     imgsz=1280,
-    rect=True,        # preserves 16:9 ratio instead of squashing to square
     device=compute_device,
     project="local_bee_models",
     name="yolo26_run_01",
-    # small object improvements
-    scale=0.3,    # limit random scaling so small bees stay small during augmentation
-    mosaic=1.0,   # mosaic augmentation at full strength
 )
