@@ -2,66 +2,50 @@
 
 Bienen-Zählsystem mit YOLO-Objekterkennung, einer Tapo-IP-Kamera (RTSP) und einem Active-Learning-Loop über Label Studio.
 
-## Pipeline-Übersicht
+## Pipeline
 
 ```
-Tapo-Kamera (RTSP)
-       │
-       ▼
-active_learning.py  ──►  Label Studio (Vorannotierung)
-                                │
-                         manuelles Review
-                                │
-                         self-labled-dataset/
-                                │
-                                ▼
-                       create_dataset.py  ──►  self-labled-dataset-yolo/
-                                                        │
-                                                        ▼
-                                               train.py  ──►  runs/ (best.pt)
-                                                        │
-                                                        ▼
-                                               bee_counter.py (Live-Erkennung)
+Label Studio (manuelles Labeln)
+        │
+        ▼
+create_dataset.py  ──►  self-labled-dataset-yolo/
+        │
+        ▼
+train.py  ──►  runs/ (best.pt)
+        │
+        ├──►  active_learning.py  ──►  Label Studio (Vorannotierung mit best.pt)
+        │              │                      │
+        │              └──── mehr Daten ──────┘  (→ nochmals trainieren (train.py))
+        │
+        └──►  bee_counter.py (Live-Erkennung)
 ```
 
-1. **Daten sammeln** — `active_learning.py` nimmt alle 5 Minuten ein Bild vom RTSP-Stream, führt YOLO-Inferenz durch und lädt das Bild mit Vorvorannotierungen nach Label Studio hoch.
-2. **Labeln** — In Label Studio werden die Vorvorannotierungen manuell korrigiert und bestätigt.
-3. **Dataset aufbereiten** — `create_dataset.py` baut aus den Label-Studio-Exporten ein YOLO-kompatibles Dataset (70 % Train / 20 % Val / 10 % Test).
-4. **Trainieren** — `train.py` fine-tuned YOLO auf dem erstellten Dataset. Das beste Modell landet unter `runs/`.
-5. **Live-Erkennung** — `bee_counter.py` zählt Bienen in Echtzeit und speichert annotierte Bilder im Ordner `detections/`.
+1. **Labeln** — In Label Studio Bilder manuell labeln und als YOLO-Export speichern.
+2. **Dataset aufbereiten** — `create_dataset.py` baut ein YOLO-kompatibles Dataset (70 % Train / 20 % Val / 10 % Test).
+3. **Trainieren** — `train.py` fine-tuned YOLO auf dem Dataset. Bestes Modell landet unter `runs/`.
+4. **Active Learning** — `active_learning.py` nutzt das trainierte Modell, um neue Frames automatisch vorannotiert in Label Studio hochzuladen. Nach manuellem Review kann erneut trainiert werden.
+5. **Live-Erkennung** — `bee_counter.py` zählt Bienen in Echtzeit und speichert annotierte Bilder unter `detections/`.
 
 ---
 
 ## Skripte
 
-### `tapo_stream.py`
-Zeigt den RTSP-Live-Stream der Tapo-Kamera in einem OpenCV-Fenster an. Nützlich zum Prüfen, ob die Kamera erreichbar ist.
-```sh
-python tapo_stream.py
-```
-> **Hinweis:** Der Stream funktioniert nur mit der richtigen Tailscale-Konfiguration, da sich die Kamera in einem privaten Netzwerk befindet. IP-Adresse, Benutzername und Passwort sind nicht öffentlich.
-
-### `active_learning.py`
-Erfasst über einen konfigurierbaren Zeitraum (Standard: 5 Stunden) alle 5 Minuten einen Frame, führt YOLO-Inferenz durch und pusht das Bild mit Bounding-Box-Vorvorannotierungen in das Label-Studio-Projekt. Kann auch als Modul importiert werden:
-```python
-from active_learning import push_frame_to_label_studio
-push_frame_to_label_studio(frame, model)
-```
-Standalone-Start (erfasst einen einzelnen Frame):
-```sh
-python active_learning.py
-```
-
 ### `create_dataset.py`
-Liest die von Label Studio exportierten Bilder (`labelstudio-data/media/upload/1/`) und die zugehörigen YOLO-Labels (`self-labled-dataset/labels/`), mischt sie zufällig und teilt sie in Train/Val/Test auf. Das fertige Dataset wird nach `self-labled-dataset-yolo/` geschrieben.
+Liest Label-Studio-Exporte und Labels aus `self-labled-dataset/`, mischt sie und teilt sie in Train/Val/Test auf.
 ```sh
 python create_dataset.py
 ```
 
 ### `train.py`
-Fine-tuned das YOLO-Modell (`yolo26n.pt`) auf dem aufbereiteten Dataset. Erkennt automatisch CUDA, Apple MPS oder CPU. Das beste Modell wird unter `runs/detect/local_bee_models/yolo26_run_01/weights/best.pt` gespeichert.
+Fine-tuned YOLO (`yolo26n.pt`) auf dem aufbereiteten Dataset. Erkennt automatisch CUDA, Apple MPS oder CPU.
 ```sh
 python train.py
+```
+
+### `active_learning.py`
+Erfasst alle 5 Minuten einen Frame vom RTSP-Stream, führt Inferenz mit dem trainierten Modell durch und pusht das Bild mit Vorannotierungen nach Label Studio.
+```sh
+python active_learning.py
 ```
 
 ### `bee_counter.py`
@@ -108,10 +92,8 @@ cp .env.example .env
 
 ## Label Studio
 
-Starten:
 ```sh
 docker-compose up -d
 ```
 
 Login: bierli01@example.com / bierli01@example.com
-
