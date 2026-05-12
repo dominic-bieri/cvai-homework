@@ -58,6 +58,12 @@ python bee_counter.py
 
 ## Installation
 
+> **Voraussetzung:** Dieses Repository verwendet [Git LFS](https://git-lfs.com/) für grosse Dateien (Bilder, Modelle). Git LFS muss vor dem Klonen installiert sein, sonst fehlen diese Dateien.
+> ```sh
+> # Installation prüfen
+> git lfs install
+> ```
+
 Mac / Linux:
 ```sh
 python3 -m venv .venv
