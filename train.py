@@ -18,7 +18,7 @@ def main():
 
     model.train(
         data="self-labled-dataset-yolo/data.yaml",
-        epochs=1,
+        epochs=100,
         imgsz=1280,
         device=compute_device,
         project="local_bee_models",
