@@ -6,18 +6,20 @@ Bienen-Zählsystem mit YOLO-Objekterkennung, einer Tapo-IP-Kamera (RTSP) und ein
 
 ```
 Label Studio (manuelles Labeln)
-        │
-        ▼
-create_dataset.py  ──►  self-labled-dataset-yolo/
-        │
-        ▼
-train.py  ──►  runs/ (best.pt)
-        │
-        ├──►  active_learning.py  ──►  Label Studio (Vorannotierung mit best.pt)
-        │              │                      │
-        │              └──── mehr Daten ──────┘  (→ nochmals trainieren (train.py))
-        │
-        └──►  bee_counter.py (Live-Erkennung)
+        |
+        v
+create_dataset.py  -->  self-labled-dataset-yolo/
+        |
+        v
+train.py  (inkl. Data Augmentation)
+        |
+        v
+    runs/best.pt  -->  bee_counter.py  (Live-Erkennung, detections/)
+        |
+        v
+active_learning.py  -->  Label Studio (Vorannotierung)
+        |
+        +-- nach manuellem Review: zurück zu create_dataset.py
 ```
 
 1. **Labeln** — In Label Studio Bilder manuell labeln und als YOLO-Export speichern.
@@ -41,6 +43,12 @@ Fine-tuned YOLO (`yolo26n.pt`) auf dem aufbereiteten Dataset. Erkennt automatisc
 ```sh
 python train.py
 ```
+
+#### Data Augmentation
+
+Das Training verwendet [albumentationsx](https://github.com/albumentations-team/AlbumentationsX) für On-the-fly-Augmentation, um die Generalisierung auf neue Kamerabilder zu verbessern. Die konkreten Augmentations befinden sich im Code (`train.py`).
+
+**Vorschau-Modus:** `SHOW_AUGMENTATION = True` rendert die augmentierten Bilder nach `debug_augmentation/` statt zu trainieren. So lassen sich Augmentations visuell überprüfen. Für den eigentlichen Trainingslauf auf `False` setzen.
 
 ### `active_learning.py`
 Erfasst alle 5 Minuten einen Frame vom RTSP-Stream, führt Inferenz mit dem trainierten Modell durch und pusht das Bild mit Vorannotierungen nach Label Studio.
