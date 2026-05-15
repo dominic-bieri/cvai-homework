@@ -3,3 +3,4 @@ torch
 python-dotenv
 opencv-python
 requests
+albumentationsx

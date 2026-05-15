@@ -26,3 +26,4 @@ Thumbs.db
 
 # Bee Detection Debug Images
 detections/
+debug_augmentation/
