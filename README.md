@@ -11,7 +11,10 @@ Label Studio (manuelles Labeln)
 create_dataset.py  -->  self-labled-dataset-yolo/
         |
         v
-train.py  (inkl. Data Augmentation)
+augment_dataset.py  -->  self-labled-dataset-yolo/train/
+        |
+        v
+train.py
         |
         v
     runs/best.pt  -->  bee_counter.py  (Live-Erkennung, detections/)
@@ -24,9 +27,10 @@ active_learning.py  -->  Label Studio (Vorannotierung)
 
 1. **Labeln** — In Label Studio Bilder manuell labeln und als YOLO-Export speichern.
 2. **Dataset aufbereiten** — `create_dataset.py` baut ein YOLO-kompatibles Dataset (70 % Train / 20 % Val / 10 % Test).
-3. **Trainieren** — `train.py` fine-tuned YOLO auf dem Dataset. Bestes Modell landet unter `runs/`.
-4. **Active Learning** — `active_learning.py` nutzt das trainierte Modell, um neue Frames automatisch vorannotiert in Label Studio hochzuladen. Nach manuellem Review kann erneut trainiert werden.
-5. **Live-Erkennung** — `bee_counter.py` zählt Bienen in Echtzeit und speichert annotierte Bilder unter `detections/`.
+3. **Augmentieren** — `augment_dataset.py` erweitert ausschliesslich die Trainingsdaten mit augmentierten Kopien inkl. korrekter Label-Transformation.
+4. **Trainieren** — `train.py` fine-tuned YOLO auf dem Dataset. Bestes Modell landet unter `runs/`.
+5. **Active Learning** — `active_learning.py` nutzt das trainierte Modell, um neue Frames automatisch vorannotiert in Label Studio hochzuladen. Nach manuellem Review kann erneut trainiert werden.
+6. **Live-Erkennung** — `bee_counter.py` zählt Bienen in Echtzeit und speichert annotierte Bilder unter `detections/`.
 
 ---
 
@@ -38,17 +42,24 @@ Liest Label-Studio-Exporte und Labels aus `self-labled-dataset/`, mischt sie und
 python create_dataset.py
 ```
 
+### `augment_dataset.py`
+Erweitert ausschliesslich die Trainingsdaten in `self-labled-dataset-yolo/train/` mit augmentierten Kopien. Val- und Test-Daten bleiben unverändert, damit die Metriken aussagekräftig bleiben. Verwendet [albumentationsx](https://github.com/albumentations-team/AlbumentationsX) und transformiert die Bounding-Box-Labels korrekt mit.
+
+Muss nach `create_dataset.py` und vor `train.py` ausgeführt werden. Um neu zu augmentieren, zuerst `create_dataset.py` erneut ausführen (löscht und baut das Dataset neu auf).
+
+```sh
+python augment_dataset.py
+```
+
+| Parameter | Wert | Beschreibung |
+|---|---|---|
+| `DATASET_MULTIPLIER` | `4.0` | Gesamtgrösse relativ zum Original. `2.0` = 2× total, `1.25` = 25% mehr, `4.0` = 4× total |
+
 ### `train.py`
 Fine-tuned YOLO (`yolo26n.pt`) auf dem aufbereiteten Dataset. Erkennt automatisch CUDA, Apple MPS oder CPU.
 ```sh
 python train.py
 ```
-
-#### Data Augmentation
-
-Das Training verwendet [albumentationsx](https://github.com/albumentations-team/AlbumentationsX) für On-the-fly-Augmentation, um die Generalisierung auf neue Kamerabilder zu verbessern. Die konkreten Augmentations befinden sich im Code (`train.py`).
-
-**Vorschau-Modus:** `SHOW_AUGMENTATION = True` rendert die augmentierten Bilder nach `debug_augmentation/` statt zu trainieren. So lassen sich Augmentations visuell überprüfen. Für den eigentlichen Trainingslauf auf `False` setzen.
 
 ### `active_learning.py`
 Erfasst alle 5 Minuten einen Frame vom RTSP-Stream, führt Inferenz mit dem trainierten Modell durch und pusht das Bild mit Vorannotierungen nach Label Studio.
