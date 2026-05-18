@@ -2,7 +2,18 @@
 
 Bienen-Zählsystem mit YOLO-Objekterkennung, einer Tapo-IP-Kamera (RTSP) und einem Active-Learning-Loop über Label Studio.
 
-## Pipeline
+---
+
+## Übersicht
+
+Das Projekt besteht aus zwei Teilen:
+
+- **Training** — Labeln, Augmentieren, Trainieren (lokal)
+- **Deploy** — Live-Erkennung und Dashboard (Server via Docker)
+
+---
+
+## Training Pipeline
 
 ```
 Label Studio (manuelles Labeln)
@@ -14,10 +25,7 @@ create_dataset.py  -->  self-labled-dataset-yolo/
 augment_dataset.py  -->  self-labled-dataset-yolo/train/
         |
         v
-train.py
-        |
-        v
-    runs/best.pt  -->  bee_counter.py  (Live-Erkennung, detections/)
+train.py  -->  runs/best.pt
         |
         v
 active_learning.py  -->  Label Studio (Vorannotierung)
@@ -28,97 +36,130 @@ active_learning.py  -->  Label Studio (Vorannotierung)
 1. **Labeln** — In Label Studio Bilder manuell labeln und als YOLO-Export speichern.
 2. **Dataset aufbereiten** — `create_dataset.py` baut ein YOLO-kompatibles Dataset (70 % Train / 20 % Val / 10 % Test).
 3. **Augmentieren** — `augment_dataset.py` erweitert ausschliesslich die Trainingsdaten mit augmentierten Kopien inkl. korrekter Label-Transformation.
-4. **Trainieren** — `train.py` fine-tuned YOLO auf dem Dataset. Bestes Modell landet unter `runs/`.
-5. **Active Learning** — `active_learning.py` nutzt das trainierte Modell, um neue Frames automatisch vorannotiert in Label Studio hochzuladen. Nach manuellem Review kann erneut trainiert werden.
-6. **Live-Erkennung** — `bee_counter.py` zählt Bienen in Echtzeit und speichert annotierte Bilder unter `detections/`.
+4. **Trainieren** — `train.py` fine-tuned YOLO26n auf dem Dataset. Bestes Modell landet unter `runs/`.
+5. **Active Learning** — `active_learning.py` nutzt das trainierte Modell, um neue Frames automatisch vorannotiert in Label Studio hochzuladen.
 
----
+### Skripte
 
-## Skripte
-
-### `create_dataset.py`
-Liest Label-Studio-Exporte und Labels aus `self-labled-dataset/`, mischt sie und teilt sie in Train/Val/Test auf.
+#### `create_dataset.py`
 ```sh
 python create_dataset.py
 ```
 
-### `augment_dataset.py`
-Erweitert ausschliesslich die Trainingsdaten in `self-labled-dataset-yolo/train/` mit augmentierten Kopien. Val- und Test-Daten bleiben unverändert, damit die Metriken aussagekräftig bleiben. Verwendet [albumentationsx](https://github.com/albumentations-team/AlbumentationsX) und transformiert die Bounding-Box-Labels korrekt mit.
-
-Muss nach `create_dataset.py` und vor `train.py` ausgeführt werden. Um neu zu augmentieren, zuerst `create_dataset.py` erneut ausführen (löscht und baut das Dataset neu auf).
-
+#### `augment_dataset.py`
+Muss nach `create_dataset.py` und vor `train.py` ausgeführt werden.
 ```sh
 python augment_dataset.py
 ```
 
 | Parameter | Wert | Beschreibung |
 |---|---|---|
-| `DATASET_MULTIPLIER` | `4.0` | Gesamtgrösse relativ zum Original. `2.0` = 2× total, `1.25` = 25% mehr, `4.0` = 4× total |
+| `DATASET_MULTIPLIER` | `4.0` | Gesamtgrösse relativ zum Original |
 
-### `train.py`
-Fine-tuned YOLO (`yolo26n.pt`) auf dem aufbereiteten Dataset. Erkennt automatisch CUDA, Apple MPS oder CPU.
+#### `train.py`
+Erkennt automatisch CUDA, Apple MPS oder CPU.
 ```sh
 python train.py
 ```
 
-### `active_learning.py`
-Erfasst alle 5 Minuten einen Frame vom RTSP-Stream, führt Inferenz mit dem trainierten Modell durch und pusht das Bild mit Vorannotierungen nach Label Studio.
+#### `active_learning.py`
+Erfasst alle 5 Minuten einen Frame, führt Inferenz durch und pusht Vorannotierungen nach Label Studio.
 ```sh
 python active_learning.py
 ```
 
-### `bee_counter.py`
-Läuft dauerhaft, fragt den RTSP-Stream alle 60 Sekunden ab, zählt erkannte Bienen und speichert annotierte Bilder im Ordner `detections/`.
-```sh
-python bee_counter.py
-```
+### Installation (Training)
 
----
-
-## Installation
-
-> **Voraussetzung:** Dieses Repository verwendet [Git LFS](https://git-lfs.com/) für grosse Dateien (Bilder, Modelle). Git LFS muss vor dem Klonen installiert sein, sonst fehlen diese Dateien.
-> ```sh
-> # Installation prüfen
-> git lfs install
-> ```
-
-Mac / Linux:
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Windows:
-```sh
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-## Umgebungsvariablen
-
-`.env.example` nach `.env` kopieren und ausfüllen:
+### Label Studio (lokal)
 
 ```sh
-cp .env.example .env
+docker compose up -d
 ```
+
+Login: `bierli01@example.com` / `bierli01@example.com`
+
+### Umgebungsvariablen (Training)
+
+`.env.example` nach `.env` kopieren:
 
 | Variable | Beschreibung |
 |---|---|
-| `TAPO_USER` | Benutzername der Tapo-Kamera *(privat)* |
-| `TAPO_PASS` | Passwort der Tapo-Kamera *(privat)* |
-| `TAPO_HOST` | IP-Adresse der Tapo-Kamera *(privat)* |
+| `TAPO_USER` | Benutzername der Tapo-Kamera |
+| `TAPO_PASS` | Passwort der Tapo-Kamera |
+| `TAPO_HOST` | IP-Adresse der Tapo-Kamera |
 | `TAPO_PORT` | RTSP-Port (Standard: 554) |
 | `LABEL_STUDIO_URL` | URL der Label-Studio-Instanz |
 | `LABEL_STUDIO_PROJECT_ID` | Projekt-ID in Label Studio |
 | `LABEL_STUDIO_REFRESH_TOKEN` | JWT Refresh-Token (Account & Settings → Access Token) |
 
-## Label Studio
+---
 
-```sh
-docker-compose up -d
+## Deploy
+
+Live-Erkennung und Dashboard laufen als Docker-Container auf einem Server. Der Counter verbindet sich via Tailscale VPN zur Kamera im Heimnetz.
+
+```
+Tapo Kamera (Heimnetz)
+        |  RTSP via Tailscale VPN
+        v
+deploy/counter     — YOLO Inferenz, speichert in SQLite
+        |  shared volume (data/)
+deploy/dashboard   — FastAPI + Web-Dashboard
+        |
+https://swarm-alarm.crstn.ch
 ```
 
-Login: bierli01@example.com / bierli01@example.com
+### Struktur
+
+```
+deploy/
+├── counter/          # RTSP → YOLO → SQLite
+├── dashboard/        # FastAPI + Dashboard
+│   └── static/       # CSS, JS, Favicon
+├── tailscale/        # VPN-Container für Kamerazugriff
+├── model/            # best.pt (via Git LFS)
+├── data/             # SQLite DB + Snapshots (nicht im Repo)
+├── docker-compose.yml
+└── .env.example
+```
+
+### Setup
+
+```sh
+cd deploy
+cp .env.example .env
+# .env ausfüllen
+docker compose up -d --build
+```
+
+### Umgebungsvariablen (Deploy)
+
+| Variable | Beschreibung |
+|---|---|
+| `TAPO_USER` | Benutzername der Tapo-Kamera |
+| `TAPO_PASS` | Passwort der Tapo-Kamera |
+| `TAPO_HOST` | Tailscale IP der Kamera |
+| `TAPO_PORT` | RTSP-Port (Standard: 554) |
+| `TS_AUTHKEY` | Tailscale Auth Key |
+| `MODEL_PATH` | Pfad zum Modell (Standard: `/model/best.pt`) |
+| `INTERVAL_SECONDS` | Messintervall in Sekunden (Standard: 60) |
+| `SWARM_THRESHOLD` | Schwarmalarm ab dieser Anzahl Bienen (Standard: 50) |
+| `ALARM_COOLDOWN_MINUTES` | Mindestabstand zwischen Alarmen (Standard: 30) |
+| `ALARM_RETENTION_DAYS` | Alarme älter als X Tage löschen (Standard: 30) |
+
+---
+
+## Voraussetzungen
+
+Dieses Repository verwendet [Git LFS](https://git-lfs.com/) für grosse Dateien (Bilder, Modelle).
+
+```sh
+git lfs install
+git clone ...
+```
