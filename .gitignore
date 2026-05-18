@@ -16,6 +16,7 @@ __pycache__/
 runs/
 local_bee_models/
 *.pt
+!deploy/model/best.pt
 
 # --- OS Specific ---
 .DS_Store
@@ -27,3 +28,7 @@ Thumbs.db
 # Bee Detection Debug Images
 detections/
 debug_augmentation/
+
+# --- Runtime Data ---
+deploy/data/
+deploy/tailscale-data/

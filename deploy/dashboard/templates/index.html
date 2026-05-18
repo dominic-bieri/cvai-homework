@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienenstock Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+  <svg class="hex-deco" width="400" height="600" viewBox="0 0 400 600">
+    <defs>
+      <pattern id="hex" x="0" y="0" width="52" height="60" patternUnits="userSpaceOnUse">
+        <polygon points="26,2 50,15 50,43 26,56 2,43 2,15" fill="none" stroke="#e8a020" stroke-width="1" />
+      </pattern>
+    </defs>
+    <rect width="400" height="600" fill="url(#hex)" />
+  </svg>
+
+  <div class="alarm-banner" id="alarmBanner">
+    <span id="alarmBannerText">Schwarmalarm</span>
+  </div>
+
+  <header>
+    <div class="status-dot" id="statusDot"></div>
+    <h1>Bienen<span>stock</span> Monitor</h1>
+    <span class="last-updated" id="lastUpdated">—</span>
+  </header>
+
+  <main>
+    <div class="card fade-in">
+      <div class="card-label">Jetzt</div>
+      <div class="card-value" id="statNow">—</div>
+      <div class="card-sub">Bienen erkannt</div>
+    </div>
+    <div class="card fade-in">
+      <div class="card-label">Peak heute</div>
+      <div class="card-value" id="statPeak">—</div>
+      <div class="card-sub">Maximum</div>
+    </div>
+    <div class="card fade-in">
+      <div class="card-label">Ø heute</div>
+      <div class="card-value green" id="statAvg">—</div>
+      <div class="card-sub">Durchschnitt</div>
+    </div>
+    <div class="card alarm-card fade-in">
+      <div class="card-label">⚠ Schwarmalarm ab</div>
+      <div>
+        <span class="threshold-display" id="thresholdDisplay">—</span>
+        <span class="threshold-unit">Bienen</span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title" id="chartTitle">—</div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#e8a020"></div>
+              <span>Anzahl</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-line" style="background:#6aaf5c"></div>
+              <span>Durchschnitt</span>
+            </div>
+          </div>
+        </div>
+        <div class="switcher" id="rangeGroup">
+          <button class="sw-btn" data-range="1h">1H</button>
+          <button class="sw-btn active" data-range="24h">24H</button>
+          <button class="sw-btn" data-range="30d">30T</button>
+          <button class="sw-btn" data-range="365d">1J</button>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+
+    <div class="snapshot-card">
+      <div class="snapshot-title">Letzter Schnappschuss</div>
+      <div class="snapshot-img-wrap" id="snapshotWrap">
+        <span class="no-snapshot">Noch kein Bild verfügbar</span>
+      </div>
+    </div>
+
+    <div class="alarm-log-card">
+      <div class="alarm-log-title-row">
+        <div class="dot"></div>
+        <div class="chart-title" style="margin-bottom:0">Schwarm-Alarm Log</div>
+      </div>
+      <div class="alarm-list" id="alarmList">
+        <div class="no-alarms">Keine Alarme</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+
+</html>
