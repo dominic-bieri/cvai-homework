@@ -12,7 +12,7 @@ TRAIN_LABELS = Path("self-labled-dataset-yolo/train/labels")
 
 # Total dataset size relative to the original training set.
 # 2.0 = 2x total  |  1.25 = 25% more  |  4.0 = 4x total
-DATASET_MULTIPLIER: float = 4.0
+DATASET_MULTIPLIER: float = 1.25
 
 pipeline = A.Compose(
     [
