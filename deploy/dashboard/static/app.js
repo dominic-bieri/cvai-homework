@@ -174,13 +174,8 @@ async function fetchSnapshot() {
         const data = await res.json();
         if (!data.url) return;
         const wrap = document.getElementById('snapshotWrap');
-        const img = wrap.querySelector('img');
         const src = `${data.url}?t=${Date.now()}`;
-        if (img) {
-            img.src = src;
-        } else {
-            wrap.innerHTML = `<img src="${src}" alt="Snapshot"><div class="snapshot-timestamp">${formatSnapshotTimestamp(data.timestamp)}</div>`;
-        }
+        wrap.innerHTML = `<img src="${src}" alt="Snapshot"><div class="snapshot-timestamp">${formatSnapshotTimestamp(data.timestamp)}</div>`;
     } catch (e) { }
 }
 
