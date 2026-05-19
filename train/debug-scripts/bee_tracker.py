@@ -1,5 +1,6 @@
 import os
 import cv2
+from pathlib import Path
 from ultralytics import YOLO
 from dotenv import load_dotenv
 from urllib.parse import quote
@@ -13,7 +14,7 @@ host = os.environ["TAPO_HOST"]
 port = os.getenv("TAPO_PORT", "554")
 rtsp_url = f"rtsp://{user}:{pw}@{host}:{port}/stream1"
 
-model = YOLO("runs/detect/local_bee_models/yolo26_run_01/weights/best.pt")
+model = YOLO(Path(__file__).resolve().parent.parent.parent / "runs/detect/local_bee_models/yolo26_run_01/weights/best.pt")
 cap = cv2.VideoCapture(rtsp_url, cv2.CAP_FFMPEG)
 
 while True:

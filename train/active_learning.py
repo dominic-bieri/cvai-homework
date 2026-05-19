@@ -13,6 +13,7 @@ import json
 import logging
 import requests
 import cv2
+from pathlib import Path
 from ultralytics import YOLO
 from dotenv import load_dotenv
 from urllib.parse import quote
@@ -29,7 +30,7 @@ LS_PROJECT_ID    = int(os.getenv("LABEL_STUDIO_PROJECT_ID", "1"))
 DURATION_SECONDS = 60 * 60 * 5
 INTERVAL_SECONDS = 60 * 5
 
-MODEL_PATH    = "runs/detect/local_bee_models/yolo26_run_01/weights/best.pt"
+MODEL_PATH    = str(Path(__file__).resolve().parent.parent / "runs/detect/local_bee_models/yolo26_run_01/weights/best.pt")
 MODEL_VERSION = "yolo26_run_01"
 CLASS_NAMES   = ["Bee"]
 

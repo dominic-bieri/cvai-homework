@@ -18,12 +18,22 @@ Thumbs.db
 # IDE
 .idea/
 
-# Runtime
+# Deploy runtime data
 deploy/data/
 deploy/tailscale-data/
 
-# Leftover generated artifacts at root (live inside train/ now)
+# Dataset
 dataset/
 self-labeled-dataset-yolo/
+
+# Training output
 runs/
+local_bee_models/
+
+# Label Studio
+train/labelstudio/media/
+train/labelstudio/export/
+
+# Debug / augmentation output
 detections/
+debug_augmentation/

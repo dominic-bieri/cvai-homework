@@ -2,6 +2,7 @@ import os
 import time
 import cv2
 import logging
+from pathlib import Path
 from ultralytics import YOLO
 from dotenv import load_dotenv
 from urllib.parse import quote
@@ -23,7 +24,7 @@ def get_rtsp_url():
 
 def main():
     # Load YOLO Model
-    trained_model = "runs/detect/local_bee_models/yolo26_run_01/weights/best.pt"
+    trained_model = Path(__file__).resolve().parent.parent.parent / "runs/detect/local_bee_models/yolo26_run_01/weights/best.pt"
 
     logger.info(f"Loading model: {trained_model}")
     model = YOLO(trained_model)

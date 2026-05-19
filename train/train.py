@@ -1,5 +1,8 @@
 import torch
+from pathlib import Path
 from ultralytics import YOLO
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def main():
@@ -18,11 +21,11 @@ def main():
     print(f"Starting YOLO local training on {compute_device}...")
 
     model.train(
-        data="dataset/data.yaml",
-        epochs=100,
+        data=str(_REPO_ROOT / "train/dataset/data.yaml"),
+        epochs=1,
         imgsz=1280,
         device=compute_device,
-        project="local_bee_models",
+        project=str(_REPO_ROOT / "runs/detect/local_bee_models"),
         name="yolo26_run_01",
     )
 

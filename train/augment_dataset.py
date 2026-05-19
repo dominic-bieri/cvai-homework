@@ -7,8 +7,8 @@ import cv2
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-TRAIN_IMAGES = Path("self-labled-dataset-yolo/train/images")
-TRAIN_LABELS = Path("self-labled-dataset-yolo/train/labels")
+TRAIN_IMAGES = Path("dataset/train/images")
+TRAIN_LABELS = Path("dataset/train/labels")
 
 # Total dataset size relative to the original training set.
 # 2.0 = 2x total  |  1.25 = 25% more  |  4.0 = 4x total
@@ -55,7 +55,7 @@ def main() -> None:
     originals = [p for p in image_paths if "_aug" not in p.stem]
 
     if len(originals) < len(image_paths):
-        logger.error("Augmented files already exist — delete self-labled-dataset-yolo/ and re-run create_dataset.py first.")
+        logger.error("Augmented files already exist — delete dataset/train augmented files and re-run create_dataset.py first.")
         return
 
     n_aug = round((DATASET_MULTIPLIER - 1) * len(originals))
