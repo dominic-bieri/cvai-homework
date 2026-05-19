@@ -1,7 +1,6 @@
-# --- Datasets ---
+# --- Generated dataset (rebuilt by create_dataset.py) ---
 dataset/
-self-labled-dataset-yolo/
-self-labled-dataset/images/
+self-labeled-dataset-yolo/
 
 # --- Python / Environment ---
 .venv/
@@ -32,3 +31,7 @@ debug_augmentation/
 # --- Runtime Data ---
 deploy/data/
 deploy/tailscale-data/
+
+# --- Label Studio runtime dirs (images live in data/images/, exports via export_labels.py) ---
+labelstudio-data/media/
+labelstudio-data/export/

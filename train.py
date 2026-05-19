@@ -18,7 +18,7 @@ def main():
     print(f"Starting YOLO local training on {compute_device}...")
 
     model.train(
-        data="self-labled-dataset-yolo/data.yaml",
+        data="dataset/data.yaml",
         epochs=100,
         imgsz=1280,
         device=compute_device,

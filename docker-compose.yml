@@ -6,4 +6,5 @@ services:
       - "8080:8080"
     volumes:
       - ./labelstudio-data:/label-studio/data
+      - ./data/images:/label-studio/data/media/upload/1
     restart: unless-stopped

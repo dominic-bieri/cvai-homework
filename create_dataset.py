@@ -4,16 +4,16 @@ import random
 import yaml
 from pathlib import Path
 
-IMAGES_DIR = Path("labelstudio-data/media/upload/1")
-LABELS_DIR = Path("self-labled-dataset/labels")
-CLASSES_FILE = Path("self-labled-dataset/classes.txt")
-OUT = Path("self-labled-dataset-yolo")
+IMAGES_DIR = Path("data/images")
+LABELS_DIR = Path("data/labels/labels")
+CLASSES_FILE = Path("data/labels/classes.txt")
+OUT = Path("dataset")
 SPLIT = {"train": 0.70, "val": 0.20, "test": 0.10}
 SEED = 42
 
 
 def get_pairs() -> list[tuple[Path, Path]]:
-    """Return (image, label) path pairs where both files exist."""
+    """Return (image, label) pairs where both files exist."""
     pairs = []
     for img in sorted(IMAGES_DIR.iterdir()):
         if img.suffix.lower() not in {".jpg", ".jpeg", ".png"}:
@@ -35,8 +35,8 @@ def split(pairs: list, ratios: dict[str, float], seed: int) -> dict[str, list]:
     n_val = round(n * ratios["val"])
     return {
         "train": shuffled[:n_train],
-        "val": shuffled[n_train : n_train + n_val],
-        "test": shuffled[n_train + n_val :],
+        "val": shuffled[n_train: n_train + n_val],
+        "test": shuffled[n_train + n_val:],
     }
 
 
@@ -56,7 +56,7 @@ def read_classes() -> list[str]:
     if CLASSES_FILE.exists():
         return [l.strip() for l in CLASSES_FILE.read_text().splitlines() if l.strip()]
     import json
-    notes = LABELS_DIR.parent / "notes.json"
+    notes = CLASSES_FILE.parent / "notes.json"
     if notes.exists():
         data = json.loads(notes.read_text())
         return [c["name"] for c in data.get("categories", [])]
@@ -64,9 +64,8 @@ def read_classes() -> list[str]:
 
 
 def write_yaml(out: Path, classes: list[str]) -> None:
-    abs_out = out.resolve()
     config = {
-        "path": str(abs_out),
+        "path": str(out.resolve()),
         "train": "train/images",
         "val": "val/images",
         "test": "test/images",
@@ -84,7 +83,7 @@ def main() -> None:
         shutil.rmtree(OUT)
 
     pairs = get_pairs()
-    print(f"Found {len(pairs)} labeled images in '{IMAGES_DIR}'")
+    print(f"Found {len(pairs)} labeled images across {IMAGES_DIR}")
 
     splits = split(pairs, SPLIT, SEED)
     copy_split(splits, OUT)

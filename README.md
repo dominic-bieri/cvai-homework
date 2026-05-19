@@ -13,16 +13,43 @@ Das Projekt besteht aus zwei Teilen:
 
 ---
 
+## Ordnerstruktur
+
+```
+cvai-homework/
+├── data/
+│   ├── images/              # Quellbilder (Git LFS) — einzige Kopie der Bilder
+│   └── labels/
+│       ├── classes.txt
+│       ├── notes.json
+│       └── labels/          # YOLO-Annotationen (.txt), exportiert von Label Studio
+├── labelstudio-data/        # Label Studio DB + Config (kein media/ im Repo)
+│   └── label_studio.sqlite3
+├── dataset/                 # generiert von create_dataset.py (nicht im Repo)
+├── deploy/                  # Deployment (Counter, Dashboard)
+├── create_dataset.py        # baut dataset/ aus data/
+├── export_labels.py         # exportiert Labels aus Label Studio nach data/labels/
+├── augment_dataset.py       # augmentiert dataset/train/
+├── train.py
+├── active_learning.py
+└── docker-compose.yml       # startet Label Studio, mountet data/images/
+```
+
+---
+
 ## Training Pipeline
 
 ```
 Label Studio (manuelles Labeln)
         |
         v
-create_dataset.py  -->  self-labled-dataset-yolo/
+export_labels.py  -->  data/labels/labels/
         |
         v
-augment_dataset.py  -->  self-labled-dataset-yolo/train/
+create_dataset.py  -->  dataset/  (train / val / test, Symlinks auf data/images/)
+        |
+        v
+augment_dataset.py  -->  dataset/train/
         |
         v
 train.py  -->  runs/best.pt
@@ -30,18 +57,26 @@ train.py  -->  runs/best.pt
         v
 active_learning.py  -->  Label Studio (Vorannotierung)
         |
-        +-- nach manuellem Review: zurück zu create_dataset.py
+        +-- nach manuellem Review: zurück zu export_labels.py
 ```
 
-1. **Labeln** — In Label Studio Bilder manuell labeln und als YOLO-Export speichern.
-2. **Dataset aufbereiten** — `create_dataset.py` baut ein YOLO-kompatibles Dataset (70 % Train / 20 % Val / 10 % Test).
-3. **Augmentieren** — `augment_dataset.py` erweitert ausschliesslich die Trainingsdaten mit augmentierten Kopien inkl. korrekter Label-Transformation.
-4. **Trainieren** — `train.py` fine-tuned YOLO26n auf dem Dataset. Bestes Modell landet unter `runs/`.
-5. **Active Learning** — `active_learning.py` nutzt das trainierte Modell, um neue Frames automatisch vorannotiert in Label Studio hochzuladen.
+1. **Labeln** — In Label Studio Bilder manuell labeln.
+2. **Labels exportieren** — `export_labels.py` holt die Annotationen per API und speichert sie als YOLO-`.txt`-Dateien in `data/labels/labels/`. Danach `data/labels/` committen.
+3. **Dataset aufbereiten** — `create_dataset.py` baut ein YOLO-kompatibles Dataset (70 % Train / 20 % Val / 10 % Test).
+4. **Augmentieren** — `augment_dataset.py` erweitert ausschliesslich die Trainingsdaten mit augmentierten Kopien inkl. korrekter Label-Transformation.
+5. **Trainieren** — `train.py` fine-tuned YOLO26n auf dem Dataset. Bestes Modell landet unter `runs/`.
+6. **Active Learning** — `active_learning.py` nutzt das trainierte Modell, um neue Frames automatisch vorannotiert in Label Studio hochzuladen.
 
 ### Skripte
 
+#### `export_labels.py`
+Exportiert die aktuellen Annotationen aus Label Studio (muss laufen) nach `data/labels/labels/`. Nach jeder Labeling-Session ausführen und `data/labels/` committen.
+```sh
+python export_labels.py
+```
+
 #### `create_dataset.py`
+Liest Bilder aus `data/images/` und Labels aus `data/labels/labels/`, erstellt `dataset/` mit Train/Val/Test-Split.
 ```sh
 python create_dataset.py
 ```
@@ -82,7 +117,18 @@ pip install -r requirements.txt
 docker compose up -d
 ```
 
+Label Studio startet auf `http://localhost:8080`. Die Bilder aus `data/images/` sind direkt sichtbar — kein manueller Import nötig, da der Ordner per Volume-Mount eingebunden ist.
+
 Login: `bierli01@example.com` / `bierli01@example.com`
+
+### Neues Projekt aufsetzen (Ersteinrichtung)
+
+```sh
+git clone <repo>          # Git LFS lädt Bilder + SQLite-DB automatisch herunter
+cp .env.example .env      # LABEL_STUDIO_REFRESH_TOKEN + TAPO_* eintragen
+docker compose up -d      # Label Studio startet mit allen Bildern und Annotationen
+python create_dataset.py  # dataset/ für Training erstellen
+```
 
 ### Umgebungsvariablen (Training)
 
