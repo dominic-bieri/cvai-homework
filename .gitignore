@@ -1,37 +1,29 @@
-# --- Generated dataset (rebuilt by create_dataset.py) ---
-dataset/
-self-labeled-dataset-yolo/
-
-# --- Python / Environment ---
+# Python
 .venv/
 __pycache__/
 *.py[cod]
 *$py.class
 
-# --- Environment Variables ---
+# Environment
 .env
 
-# --- YOLO / Training Outputs ---
-runs/
-local_bee_models/
+# Models
 *.pt
 !deploy/model/best.pt
 
-# --- OS Specific ---
+# OS
 .DS_Store
 Thumbs.db
 
-# Jetbrains
+# IDE
 .idea/
 
-# Bee Detection Debug Images
-detections/
-debug_augmentation/
-
-# --- Runtime Data ---
+# Runtime
 deploy/data/
 deploy/tailscale-data/
 
-# --- Label Studio runtime dirs (images live in data/images/, exports via export_labels.py) ---
-labelstudio-data/media/
-labelstudio-data/export/
+# Leftover generated artifacts at root (live inside train/ now)
+dataset/
+self-labeled-dataset-yolo/
+runs/
+detections/

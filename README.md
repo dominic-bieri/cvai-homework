@@ -2,210 +2,34 @@
 
 Bienen-Zählsystem mit YOLO-Objekterkennung, einer Tapo-IP-Kamera (RTSP) und einem Active-Learning-Loop über Label Studio.
 
----
-
 ## Übersicht
-
-Das Projekt besteht aus zwei Teilen:
-
-- **Training** — Labeln, Augmentieren, Trainieren (lokal)
-- **Deploy** — Live-Erkennung und Dashboard (Server via Docker)
-
----
-
-## Ordnerstruktur
-
-```
-cvai-homework/
-├── data/
-│   ├── images/              # Quellbilder (Git LFS) — einzige Kopie der Bilder
-│   └── labels/
-│       ├── classes.txt
-│       ├── notes.json
-│       └── labels/          # YOLO-Annotationen (.txt), exportiert von Label Studio
-├── labelstudio-data/        # Label Studio DB + Config (kein media/ im Repo)
-│   └── label_studio.sqlite3
-├── dataset/                 # generiert von create_dataset.py (nicht im Repo)
-├── deploy/                  # Deployment (Counter, Dashboard)
-├── create_dataset.py        # baut dataset/ aus data/
-├── export_labels.py         # exportiert Labels aus Label Studio nach data/labels/
-├── augment_dataset.py       # augmentiert dataset/train/
-├── train.py
-├── active_learning.py
-└── docker-compose.yml       # startet Label Studio, mountet data/images/
-```
-
----
-
-## Training Pipeline
-
-```
-Label Studio (manuelles Labeln)
-        |
-        v
-export_labels.py  -->  data/labels/labels/
-        |
-        v
-create_dataset.py  -->  dataset/  (train / val / test, Symlinks auf data/images/)
-        |
-        v
-augment_dataset.py  -->  dataset/train/
-        |
-        v
-train.py  -->  runs/best.pt
-        |
-        v
-active_learning.py  -->  Label Studio (Vorannotierung)
-        |
-        +-- nach manuellem Review: zurück zu export_labels.py
-```
-
-1. **Labeln** — In Label Studio Bilder manuell labeln.
-2. **Labels exportieren** — `export_labels.py` holt die Annotationen per API und speichert sie als YOLO-`.txt`-Dateien in `data/labels/labels/`. Danach `data/labels/` committen.
-3. **Dataset aufbereiten** — `create_dataset.py` baut ein YOLO-kompatibles Dataset (70 % Train / 20 % Val / 10 % Test).
-4. **Augmentieren** — `augment_dataset.py` erweitert ausschliesslich die Trainingsdaten mit augmentierten Kopien inkl. korrekter Label-Transformation.
-5. **Trainieren** — `train.py` fine-tuned YOLO26n auf dem Dataset. Bestes Modell landet unter `runs/`.
-6. **Active Learning** — `active_learning.py` nutzt das trainierte Modell, um neue Frames automatisch vorannotiert in Label Studio hochzuladen.
-
-### Skripte
-
-#### `export_labels.py`
-Exportiert die aktuellen Annotationen aus Label Studio (muss laufen) nach `data/labels/labels/`. Nach jeder Labeling-Session ausführen und `data/labels/` committen.
-```sh
-python export_labels.py
-```
-
-#### `create_dataset.py`
-Liest Bilder aus `data/images/` und Labels aus `data/labels/labels/`, erstellt `dataset/` mit Train/Val/Test-Split.
-```sh
-python create_dataset.py
-```
-
-#### `augment_dataset.py`
-Muss nach `create_dataset.py` und vor `train.py` ausgeführt werden.
-```sh
-python augment_dataset.py
-```
-
-| Parameter | Wert | Beschreibung |
-|---|---|---|
-| `DATASET_MULTIPLIER` | `4.0` | Gesamtgrösse relativ zum Original |
-
-#### `train.py`
-Erkennt automatisch CUDA, Apple MPS oder CPU.
-```sh
-python train.py
-```
-
-#### `active_learning.py`
-Erfasst alle 5 Minuten einen Frame, führt Inferenz durch und pusht Vorannotierungen nach Label Studio.
-```sh
-python active_learning.py
-```
-
-### Installation (Training)
-
-```sh
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-### Label Studio (lokal)
-
-```sh
-docker compose up -d
-```
-
-Label Studio startet auf `http://localhost:8080`. Die Bilder aus `data/images/` sind direkt sichtbar — kein manueller Import nötig, da der Ordner per Volume-Mount eingebunden ist.
-
-Login: `bierli01@example.com` / `bierli01@example.com`
-
-### Neues Projekt aufsetzen (Ersteinrichtung)
-
-```sh
-git clone <repo>          # Git LFS lädt Bilder + SQLite-DB automatisch herunter
-cp .env.example .env      # LABEL_STUDIO_REFRESH_TOKEN + TAPO_* eintragen
-docker compose up -d      # Label Studio startet mit allen Bildern und Annotationen
-python create_dataset.py  # dataset/ für Training erstellen
-```
-
-### Umgebungsvariablen (Training)
-
-`.env.example` nach `.env` kopieren:
-
-| Variable | Beschreibung |
-|---|---|
-| `TAPO_USER` | Benutzername der Tapo-Kamera |
-| `TAPO_PASS` | Passwort der Tapo-Kamera |
-| `TAPO_HOST` | IP-Adresse der Tapo-Kamera |
-| `TAPO_PORT` | RTSP-Port (Standard: 554) |
-| `LABEL_STUDIO_URL` | URL der Label-Studio-Instanz |
-| `LABEL_STUDIO_PROJECT_ID` | Projekt-ID in Label Studio |
-| `LABEL_STUDIO_REFRESH_TOKEN` | JWT Refresh-Token (Account & Settings → Access Token) |
-
----
-
-## Deploy
-
-Live-Erkennung und Dashboard laufen als Docker-Container auf einem Server. Der Counter verbindet sich via Tailscale VPN zur Kamera im Heimnetz.
 
 ```
 Tapo Kamera (Heimnetz)
-        |  RTSP via Tailscale VPN
+        |  RTSP
         v
-deploy/counter     — YOLO Inferenz, speichert in SQLite
-        |  shared volume (data/)
-deploy/dashboard   — FastAPI + Web-Dashboard
+train/active_learning.py  —  erfasst Frames, Vorannotierung via YOLO
         |
-https://swarm-alarm.crstn.ch
+        v
+Label Studio  —  manuelles Labeln / Korrigieren
+        |
+        v
+train/  —  Export, Dataset erstellen, Trainieren
+        |
+        v
+deploy/  —  Live-Erkennung + Dashboard auf dem Server
 ```
 
-### Struktur
+## Teile
 
-```
-deploy/
-├── counter/          # RTSP → YOLO → SQLite
-├── dashboard/        # FastAPI + Dashboard
-│   └── static/       # CSS, JS, Favicon
-├── tailscale/        # VPN-Container für Kamerazugriff
-├── model/            # best.pt (via Git LFS)
-├── data/             # SQLite DB + Snapshots (nicht im Repo)
-├── docker-compose.yml
-└── .env.example
-```
-
-### Setup
-
-```sh
-cd deploy
-cp .env.example .env
-# .env ausfüllen
-docker compose up -d --build
-```
-
-### Umgebungsvariablen (Deploy)
-
-| Variable | Beschreibung |
-|---|---|
-| `TAPO_USER` | Benutzername der Tapo-Kamera |
-| `TAPO_PASS` | Passwort der Tapo-Kamera |
-| `TAPO_HOST` | Tailscale IP der Kamera |
-| `TAPO_PORT` | RTSP-Port (Standard: 554) |
-| `TS_AUTHKEY` | Tailscale Auth Key |
-| `MODEL_PATH` | Pfad zum Modell (Standard: `/model/best.pt`) |
-| `INTERVAL_SECONDS` | Messintervall in Sekunden (Standard: 60) |
-| `SWARM_THRESHOLD` | Schwarmalarm ab dieser Anzahl Bienen (Standard: 50) |
-| `ALARM_COOLDOWN_MINUTES` | Mindestabstand zwischen Alarmen (Standard: 30) |
-| `ALARM_RETENTION_DAYS` | Alarme älter als X Tage löschen (Standard: 30) |
-
----
+- **[Training](train/README.md)** — Label Studio, Dataset-Pipeline, Modell trainieren
+- **[Deployment](deploy/README.md)** — Live-Erkennung, Dashboard, Docker-Setup
 
 ## Voraussetzungen
 
-Dieses Repository verwendet [Git LFS](https://git-lfs.com/) für grosse Dateien (Bilder, Modelle).
+Dieses Repository verwendet [Git LFS](https://git-lfs.com/) für Bilder und Modelle.
 
 ```sh
 git lfs install
-git clone ...
+git clone <repo>
 ```

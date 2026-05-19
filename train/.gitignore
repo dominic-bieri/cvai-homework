@@ -1,0 +1,14 @@
+# Generated dataset
+dataset/
+
+# YOLO training output
+runs/
+local_bee_models/
+
+# Label Studio runtime
+labelstudio/media/
+labelstudio/export/
+
+# Debug output
+detections/
+debug_augmentation/
