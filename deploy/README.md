@@ -42,7 +42,7 @@ docker compose up -d --build
 Trainiertes Modell aus `train/runs/` nach `deploy/model/best.pt` kopieren und neu deployen:
 
 ```sh
-cp train/runs/detect/local_bee_models/<run>/weights/best.pt deploy/model/best.pt
+cp runs/detect/local_bee_models/<run>/weights/best.pt deploy/model/best.pt
 cd deploy && docker compose up -d --build
 ```
 

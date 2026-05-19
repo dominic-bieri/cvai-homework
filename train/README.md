@@ -14,7 +14,7 @@ train/
 │       └── labels/          # YOLO-Annotationen (.txt), exportiert von Label Studio
 ├── labelstudio/             # Label Studio DB + Config (kein media/ im Repo)
 │   └── label_studio.sqlite3
-├── debug/                   # Hilfsskripte für Kamera und Stream
+├── debug-scripts/           # Hilfsskripte für Kamera und Stream
 ├── documentation/
 ├── dataset/                 # generiert von create_dataset.py (nicht im Repo)
 ├── export_labels.py
@@ -108,7 +108,7 @@ python augment_dataset.py
 
 | Parameter | Wert | Beschreibung |
 |---|---|---|
-| `DATASET_MULTIPLIER` | `4.0` | Gesamtgrösse relativ zum Original |
+| `DATASET_MULTIPLIER` | `1.25` | Gesamtgrösse relativ zum Original |
 
 #### `train.py`
 Erkennt automatisch CUDA, Apple MPS oder CPU.
@@ -120,6 +120,24 @@ python train.py
 Erfasst alle 5 Minuten einen Frame, führt Inferenz durch und pusht Vorannotierungen nach Label Studio.
 ```sh
 python active_learning.py
+```
+
+#### `debug-scripts/tapo_stream.py`
+Öffnet den RTSP-Stream der Kamera und zeigt ihn live an. Nützlich zum Überprüfen der Kameraverbindung.
+```sh
+python debug-scripts/tapo_stream.py
+```
+
+#### `debug-scripts/bee_counter.py`
+Zählt einmal pro Minute die erkannten Bienen und speichert das annotierte Bild unter `debug-scripts/detections/`.
+```sh
+python debug-scripts/bee_counter.py
+```
+
+#### `debug-scripts/bee_tracker.py`
+Zeigt den RTSP-Stream mit Live-Tracking (IDs) an. Nützlich um die Modellqualität visuell zu beurteilen.
+```sh
+python debug-scripts/bee_tracker.py
 ```
 
 ## Umgebungsvariablen
