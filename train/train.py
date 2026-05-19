@@ -22,7 +22,7 @@ def main():
 
     model.train(
         data=str(_REPO_ROOT / "train/dataset/data.yaml"),
-        epochs=1,
+        epochs=100,
         imgsz=1280,
         device=compute_device,
         project=str(_REPO_ROOT / "runs/detect/local_bee_models"),
