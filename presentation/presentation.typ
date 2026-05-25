@@ -32,6 +32,7 @@
 - Image labeling with Label Studio
 - Train CNN with YOLO
 - #link("https://swarm-alarm.crstn.ch/")[Swarm alarm application]
+- #link("https://github.com/dominic-bieri/cvai-homework")[GitHub Repository]
 
 #image("../media/presentation/image-7.png", width: 30%)
 
