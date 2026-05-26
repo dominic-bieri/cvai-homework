@@ -7,7 +7,7 @@
   ratio: 16 / 9,
   title-color: rgb("#ffcc00"),
   toc: false,
-  authors:"Dominic Bierlie01, Elias Christenbaum, Laura Grüter",
+  authors: "Dominic Bieri, Elias Christen, Laura Grüter",
 )
 
 = Problem to be Solved
@@ -41,37 +41,33 @@
 - Existing dataset of bees from Roboflow
 - Existing camera installation
 - Model training with YOLO
-- Naja... 
+- Well...
 
 #grid(
   columns: (1fr, 1fr),
   gutter: 1em,
-  image("../media/presentation/image-4.png"),
-  image("../media/presentation/image-5.png")
+  image("../media/presentation/image-4.png"), image("../media/presentation/image-5.png"),
 )
 
 = Improvements
 == Camera Installation - Closer to the Bees
 
 #grid(
-  columns: (1fr, 1fr), 
+  columns: (1fr, 1fr),
   gutter: 1em,
-  image("/media/presentation/image-19.png", width: 60%),
-  image("/media/presentation/image-22.png", width: 80%),
+  image("/media/presentation/image-19.png", width: 60%), image("/media/presentation/image-22.png", width: 80%),
 )
 
-Christenbaum is watching you... 
+Christenbaum is watching you...
 == Manually Labeled Data with Label Studio
 - Manually labeled images (screenshots from Tapo stream at different times / lighting conditions)
 - Using bounding box for "bee" classification
 
 #grid(
-  columns: (1fr, 1fr), 
+  columns: (1fr, 1fr),
   gutter: 1em,
-  image("../media/presentation/image-8.png", width: 60%),
-  image("../media/presentation/image-9.png", width: 60%),
-  image("../media/presentation/image-10.png", width: 60%),
-  image("../media/presentation/image-11.png", width: 60%)
+  image("../media/presentation/image-8.png", width: 60%), image("../media/presentation/image-9.png", width: 60%),
+  image("../media/presentation/image-10.png", width: 60%), image("../media/presentation/image-11.png", width: 60%),
 )
 
 = Result
@@ -87,21 +83,23 @@ Some unexpected weather conditions....
 
 #image("../media/presentation/image-14.png", width: 50%)
 
-The bees that were detected weren't bees - so we need more images. 
-
+The bees that were detected weren't bees - so we need more images.
 
 = Final Result and Technical Background
 
 == Train CNN
 - Manually labeled images in Label Studio
 - Create dataset (train, validation, test)
-- Data augmentation - augment only the training data
+- Data augmentation
+  - augment only the training data
 - Train the model YOLO26n
-- Active learning - captures new frames from the camera and sends them to Label Studio along with pre-annotations
+- "Active learning"
+  - get faster more labled data
+  - captures new frames from the camera and sends them to Label Studio along with pre-annotations
+  - manuel step required
 
-== Data Augmentation
+== Data Augmentation using albumentationsx
 #show raw: set text(size: 7pt)
-
 ```python
 pipeline = A.Compose(
     [
@@ -136,8 +134,8 @@ pipeline = A.Compose(
 
 #image("../media/presentation/image-16.png", width: 40%)
 
-==  Have you ever seen a beekeeper at work? 
-You may spot one, if you are lucky :) 
+== Have you ever seen a beekeeper at work?
+You may spot one, if you are lucky :)
 
 
 #image("../media/presentation/image-18.png", width: 60%)
